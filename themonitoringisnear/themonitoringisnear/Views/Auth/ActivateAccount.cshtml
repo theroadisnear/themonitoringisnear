@@ -1,0 +1,97 @@
+﻿@model themonitoringisnear.Models.MultipleModel.ActivateVM
+
+@{
+    ViewBag.Title = "ActivateAccount";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="~/Scripts/angular.min.js"></script>
+@Scripts.Render("~/Scripts/angular_scripts/password/scripts/app.js")
+@Scripts.Render("~/Scripts/angular_scripts/password/scripts/services/password.js")
+@Scripts.Render("~/Scripts/angular_scripts/password/scripts/controllers/password.js")
+
+@Styles.Render("~/Content/components/progress.min.css")
+@if (Model.Error == true)
+{
+    foreach (var error in Model.Message)
+    {
+        <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(modelItem => error)', { status: 'warning', timeout: 0, pos: 'bottom-right' });
+            });
+        </script>
+    }
+}
+else if (Model.Error == false)
+{
+    <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(m=>m.Message[0])', { status: 'success', timeout: 5000, pos: 'bottom-right' });
+            });
+    </script>
+}
+<div class="uk-container uk-container-center uk-margin-top" ng-app="passwordApp" ng-controller="PasswordCtrl">
+    <article class="uk-article"> 
+        <h1 class="uk-article-title">Account Activation</h1>
+        <p class="uk-article-lead">
+            Hi! @Html.DisplayFor(u => u.DbUser.Student.LastName), @Html.DisplayFor(u => u.DbUser.Student.FirstName) @Html.DisplayFor(u => u.DbUser.Student.MiddleInitial), Kindly fill up the necessary account information below.
+        </p>
+        <hr class="uk-article-divider" />
+        <div class="uk-width-medium-1-2 uk-align-center">
+            @using (Html.BeginForm("ActivateAccount", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(a=>a.AccountActivation.UserId, new { @Value=Model.DbUser.Id})
+                <fieldset data-uk-margin>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(e => e.AccountActivation.Password, new { @for = "password", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.PasswordFor(e => e.AccountActivation.Password, new { @placeholder = "password", @id = "password", @required = "required", ng_model = "user.password" })
+                            <div class="uk-margin-small-top uk-align-right uk-width-medium-4-10 uk-progress uk-progress-striped uk-active" ng-class="{'uk-progress-success': isPasswordStrong(), 'uk-progress-warning': isPasswordOk(), 'uk-progress-danger': isPasswordWeak()}">
+                                <div class="uk-progress-bar" aria-valuenow="{{passwordStrength}}" aria-valuemin="0" aria-valuemax="100" style="width: {{passwordStrength}}%">
+                                    <span class="">{{strength}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(e => e.AccountActivation.ConfirmPassword, new { @for = "confirmPassword", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.PasswordFor(e => e.AccountActivation.ConfirmPassword, new { @placeholder = "confirm password", @id = "confirmPassword", @required = "required", ng_model = "user.confirmPassword" })
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(u => u.AccountActivation.SecretQuestion, new { @for = "secretQuestion", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @if (Model.AccountActivation != null && Model.AccountActivation.SecretQuestion != null)
+                            {
+                                @Html.TextBoxFor(u => u.AccountActivation.SecretQuestion, new { @placeholder = "secret question", @id = "secretQuestion", @required = "required", ng_model = "user.secretQuestion", ng_init = @Html.Raw("user.secretQuestion='" + Model.AccountActivation.SecretQuestion + "'") })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(u => u.AccountActivation.SecretQuestion, new { @placeholder = "secret question", @id = "secretQuestion", @required = "required", ng_model = "user.secretQuestion" })
+                            }
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(u => u.AccountActivation.SecretAnswer, new { @for = "secretAnswer", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @if (Model.AccountActivation != null && Model.AccountActivation.SecretAnswer != null)
+                            {
+                                @Html.TextBoxFor(u => u.AccountActivation.SecretAnswer, new { @placeholder = "secret answer", @id = "secretAnswer", @required = "required", @ng_model = "user.secretAnswer", ng_init = @Html.Raw("user.secretAnswer='" + Model.AccountActivation.SecretAnswer + "'") })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(u => u.AccountActivation.SecretAnswer, new { @placeholder = "secret answer", @id = "secretAnswer", @required = "required", @ng_model = "user.secretAnswer" })
+                            }
+                        </div>
+                    </div>
+
+                </fieldset>
+                <br />
+                <div class="uk-form-row">
+                    <button class="uk-width-1-5 uk-align-right uk-button uk-button-success" type="submit">OK</button>
+                </div>
+            }
+        </div>
+    </article>
+</div>

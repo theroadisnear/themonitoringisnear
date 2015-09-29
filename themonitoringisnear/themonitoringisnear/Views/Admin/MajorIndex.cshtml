@@ -1,0 +1,153 @@
+﻿@model themonitoringisnear.Models.MultipleModel.MajorModelVM
+@{
+    ViewBag.Title = "MajorIndex";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@if (Model.Error == true)
+{
+    foreach (var error in Model.Message)
+    {
+        <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(modelItem => error)', { status: 'warning', timeout: 0, pos: 'bottom-right' });
+            });
+        </script>
+    }
+}
+else if (Model.Error == false)
+{
+    <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(m=>m.Message[0])', { status: 'success', timeout: 5000, pos: 'bottom-right' });
+            });
+    </script>
+}
+<div class="uk-margin-small uk-margin-top">
+    <h2 class="">
+        <span class="uk-vertical-align-middle">
+            @Html.ActionLink(" ", "GroupsIndex", "Admin", new { @class = "uk-icon-chevron-left uk-icon-large" })
+        </span>
+        @Html.DisplayFor(m=>m.CollegeName)
+    </h2>
+    <ul class="uk-subnav uk-subnav-pill">
+        <li class="">
+            <a class="uk-button-primary" data-uk-modal="{target:'#create-major'}"><i class="uk-icon-plus-square"></i> Create</a>
+        </li>
+    </ul>
+    <div class="uk-margin-left">
+        @if (!Model.DbMajor.Any())
+        {
+            <h2 class="uk-text-warning">There is no existing group</h2>
+        }
+        else if (Model.DbMajor.Any())
+        {
+            <ul class="uk-thumbnav uk-width-medium-1-1">
+                @foreach (var item in Model.DbMajor)
+                {
+                    <li class="uk-animation-scale uk-margin-right">
+                        <ul class="uk-subnav">
+                            <li data-uk-dropdown="{delay:'500'}">
+                                <a class="uk-button uk-button-mini uk-button-primary uk-icon-gear uk-icon-medium"></a>
+                                <div class="uk-dropdown uk-dropdown-small">
+                                    <ul class="uk-nav uk-nav-dropdown">
+                                        <li><a class="" data-uk-modal="{target:'@Html.Raw("#update-"+item.Id)'}">Update</a></li>
+                                        <li><a class="" data-uk-modal="{target:'@Html.Raw("#delete-"+item.Id)'}">Delete</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                        <figure class="uk-overlay uk-overlay-hover">
+                            <img class="" src="@Url.Content("~/Image/default/group.png")" />
+
+                            <figcaption class="uk-overlay-panel uk-overlay-background uk-overlay-bottom uk-ignore">
+                                <p class="">
+                                    @Html.DisplayFor(modelItem => item.Major)
+                                    @Html.ActionLink(" ", "SectionIndex", new { id = item.Id }, new { @class = "uk-position-cover" })
+                                </p>
+                            </figcaption>
+                        </figure>
+                    </li>
+                }
+            </ul>
+        }
+
+    </div>
+</div>
+<div id="create-major" class="uk-modal">
+    @using (Html.BeginForm("CreateMajor", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(c=>c.CreateMajor.CollegeId, new { @Value=Model.CollegeId})
+        <div class="uk-modal-dialog">
+            <a class="uk-modal-close uk-close"></a>
+            <form class="uk-form uk-form-horizontal">
+                <fieldset data-uk-margin>
+                    <legend>Create Major</legend>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(u => u.CreateMajor.MajorName, new { @for = "major", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(u => u.CreateMajor.MajorName, new { @placeholder = "major name", @id = "major", @required = "required" })
+                        </div>
+                    </div>
+                </fieldset>
+                <br />
+                <div class="uk-form-row">
+                    <button class="uk-width-1-5 uk-align-right uk-button uk-button-success" type="submit">OK</button>
+                </div>
+            </form>
+        </div>
+    }
+</div>
+@foreach (var item in Model.DbMajor)
+{
+    <div id="@Html.Raw("update-"+item.Id)" class="uk-modal">
+        @using (Html.BeginForm("UpdateMajor", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.CollegeId)
+            <div class="uk-modal-dialog">
+                <a class="uk-modal-close uk-close"></a>
+                <form class="uk-form uk-form-horizontal">
+                    <fieldset data-uk-margin>
+                        <legend>Update Major Information</legend>
+                        @Html.HiddenFor(d => d.UpdateMajor.MajorId, new { @Value = item.Id })
+                        <div class="uk-form-row">
+                            @Html.LabelFor(u => u.UpdateMajor.MajorName, new { @for = "majorUpdate", @class = "uk-form-label uk-text-right" })
+                            <div class="uk-form-controls">
+                                @Html.TextBoxFor(u => u.UpdateMajor.MajorName, new { @placeholder = "", @id = "majorUpdate", @required = "required", @Value = item.Major })
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="uk-form-row uk-margin-top">
+                        <button class="uk-width-1-5 uk-align-right uk-button uk-button-primary" type="submit">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div id="@Html.Raw("delete-"+item.Id)" class="uk-modal">
+        @using (Html.BeginForm("DeleteMajor", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m=>m.CollegeId)
+            <div class="uk-modal-dialog">
+                <a class="uk-modal-close uk-close"></a>
+                <form class="uk-form uk-form-horizontal">
+                    <fieldset data-uk-margin>
+                        <legend>Delete Confirmation</legend>
+                        @Html.HiddenFor(d => d.DeleteMajor.MajorId, new { @Value = item.Id })
+                        <div class="uk-form-row">
+                            Are you sure to remove @Html.DisplayFor(modelItem => item.Major, new { @class = "uk-text-bold" }) from the list?
+                            <div class="uk-form-controls">
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="uk-form-row uk-margin-top">
+                        <button class="uk-width-1-5 uk-align-right uk-button uk-button-primary" type="submit">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+}

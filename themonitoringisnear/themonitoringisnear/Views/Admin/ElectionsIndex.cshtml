@@ -1,0 +1,134 @@
+﻿@model themonitoringisnear.Models.MultipleModel.ElectionIndexVM
+@{
+    ViewBag.Title = "ElectionIndex";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var db = new themonitoringisnear.DAL.ElectionDbContext();
+    var groupList = new List<SelectListItem>();
+    var all = new SelectListItem() { Text = "All", Value = "" };
+    groupList.Add(all);
+}
+<link href="~/Content/components/datepicker.min.css" rel="stylesheet" />
+<link href="~/Content/components/autocomplete.min.css" rel="stylesheet" />
+<script src="~/Scripts/components/autocomplete.min.js"></script>
+<script src="~/Scripts/components/datepicker.min.js"></script>
+<script src="~/Scripts/components/timepicker.min.js"></script>
+@if (Model.Error == true)
+{
+    foreach (var error in Model.Message)
+    {
+        <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(modelItem => error)', { status: 'warning', timeout: 0, pos: 'bottom-right' });
+            });
+        </script>
+    }
+}
+else if (Model.Error == false)
+{
+    <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(m=>m.Message[0])', { status: 'success', timeout: 5000, pos: 'bottom-right' });
+            });
+    </script>
+}
+<div class="uk-margin-small uk-margin-top">
+    <h2 class="">University of Santo Tomas</h2>
+    <ul class="uk-subnav uk-subnav-pill">
+        <li class="">
+            <a class="uk-button-primary" data-uk-modal="{target:'#create-election'}"><i class="uk-icon-plus-square"></i> Create</a>
+        </li>
+    </ul>
+    <div class="uk-margin-left">
+        @if (!Model.DbElection.Any())
+        {
+            <h2 class="uk-text-warning">There is no existing election</h2>
+        }
+        else if (Model.DbElection.Any())
+        {
+            <ul class="uk-thumbnav uk-width-medium-1-1">
+                @foreach (var item in Model.DbElection)
+                {
+                    <li class="uk-animation-scale uk-margin-right">
+                        <ul class="uk-subnav">
+                            <li data-uk-dropdown="{delay:'500'}">
+                                <a class="uk-button uk-button-mini uk-button-primary uk-icon-gear uk-icon-medium"></a>
+                                <div class="uk-dropdown uk-dropdown-small">
+                                    <ul class="uk-nav uk-nav-dropdown">
+                                        <li><a class="" data-uk-modal="{target:'@Html.Raw("#update-"+item.Id)'}">Update</a></li>
+                                        <li><a class="" data-uk-modal="{target:'@Html.Raw("#delete-"+item.Id)'}">Delete</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                        <figure class="uk-overlay uk-overlay-hover">
+                            <img class="" src="@Url.Content("~/Image/default/group.png")" />
+
+                            <figcaption class="uk-overlay-panel uk-overlay-background uk-overlay-bottom uk-ignore">
+                                <p class="">
+                                    @Html.DisplayFor(modelItem => item.ElectionName)
+                                </p>
+                            </figcaption>
+                        </figure>
+                    </li>
+                }
+            </ul>
+        }
+
+    </div>
+</div>
+<div id="create-election" class="uk-modal">
+    @using (Html.BeginForm("CreateElection", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+        <div class="uk-modal-dialog">
+            <a class="uk-modal-close uk-close"></a>
+            <form class="uk-form uk-form-horizontal">
+                <fieldset data-uk-margin>
+                    <legend>Create Election</legend>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(e => e.CreateElection.ElectionName, new { @for = "electionName", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(e => e.CreateElection.ElectionName, new { @placeholder = "election name", @id = "electionName", @required = "required" })
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(s => s.CreateElection.GroupId, new { @for = "group", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @foreach(var group in Model.DbCollege)
+                            {
+                                groupList.Add(new SelectListItem() { Text = group.College, Value = group.Id.ToString() });
+                                foreach(var major in db.Majors.Where(m=>m.CollegeId == group.Id).ToList())
+                                {
+                                    groupList.Add(new SelectListItem() { Text = "**"+major.Major, Value = major.Id.ToString()});
+                                    foreach(var section in db.Sections.Where(s=>s.MajorId == major.Id).ToList())
+                                    {
+                                        groupList.Add(new SelectListItem() { Text = "****"+section.Section, Value = section.Id.ToString() });
+                                    }
+                                }
+                            }
+                            @Html.DropDownListFor(s => s.CreateElection.GroupId, groupList, new { @id = "group" })
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(e => e.CreateElection.StartDate, new { @for = "starteDateTime", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(e => e.CreateElection.StartDate, new { @placeholder = "mm/dd/yyyy", @id = "starteDateTime", @class = "uk-width-3-10", @required = "required", @data_uk_datepicker =Html.Raw("{format: 'MM/DD/YYYY', minDate:'"+ DateTime.Now.ToShortDateString()+ "'}")})
+                            @Html.TextBoxFor(e => e.CreateElection.StartTime, new { @placeholder = "hh:ss ", @id = "starteTime", @class = "uk-width-4-10", @required = "required", @data_uk_timepicker = "{format: '24h', start:7, end:22}"})
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(e => e.CreateElection.EndDate, new { @for = "endDateTime", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(e => e.CreateElection.EndDate, new { @placeholder = "mm/dd/yyyy", @id = "endDateTime", @class = "uk-width-3-10", @required = "required", @data_uk_datepicker = Html.Raw("{format: 'MM/DD/YYYY', minDate:'" + DateTime.Now.ToShortDateString() + "'}") })
+                            @Html.TextBoxFor(e => e.CreateElection.EndTime, new { @placeholder = "hh:ss ", @id = "endTime", @class = "uk-width-4-10", @required = "required", @data_uk_timepicker = "{format: '24h', start:7, end:22}" })
+                        </div>
+                    </div>
+                </fieldset>
+                <br />
+                <div class="uk-form-row">
+                    <button class="uk-width-1-5 uk-align-right uk-button uk-button-success" type="submit">OK</button>
+                </div>
+            </form>
+        </div>
+    }
+</div>

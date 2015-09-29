@@ -1,0 +1,145 @@
+﻿@model themonitoringisnear.Models.MultipleModel.CollegeModelVM
+@{
+    ViewBag.Title = "GroupsIndex";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@if (Model.Error == true)
+{
+    foreach (var error in Model.Message)
+    {
+        <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(modelItem => error)', { status: 'warning', timeout: 0, pos: 'bottom-right' });
+            });
+        </script>
+    }
+}
+else if (Model.Error == false)
+{
+    <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(m=>m.Message[0])', { status: 'success', timeout: 5000, pos: 'bottom-right' });
+            });
+    </script>
+}
+<div class="uk-margin-small uk-margin-top">
+    <h2 class="">University of Santo Tomas</h2>
+    <ul class="uk-subnav uk-subnav-pill">
+        <li class="">
+            <a class="uk-button-primary" data-uk-modal="{target:'#create-college'}"><i class="uk-icon-plus-square"></i> Create</a>
+        </li>
+    </ul>
+    <div class="uk-margin-left">
+        @if (!Model.DbCollege.Any())
+        {
+            <h2 class="uk-text-warning">There is no existing group</h2>
+        }
+        else if (Model.DbCollege.Any())
+        {
+            <ul class="uk-thumbnav uk-width-medium-1-1">
+                @foreach (var item in Model.DbCollege)
+                {
+                    <li class="uk-animation-scale uk-margin-right">
+                        <ul class="uk-subnav">
+                            <li data-uk-dropdown="{delay:'500'}">
+                                <a class="uk-button uk-button-mini uk-button-primary uk-icon-gear uk-icon-medium"></a>
+                                <div class="uk-dropdown uk-dropdown-small">
+                                    <ul class="uk-nav uk-nav-dropdown">
+                                        <li><a class="" data-uk-modal="{target:'@Html.Raw("#update-"+item.Id)'}">Update</a></li>
+                                        <li><a class="" data-uk-modal="{target:'@Html.Raw("#delete-"+item.Id)'}">Delete</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                        <figure class="uk-overlay uk-overlay-hover">
+                            <img class="" src="@Url.Content("~/Image/default/group.png")" />
+                            
+                            <figcaption class="uk-overlay-panel uk-overlay-background uk-overlay-bottom uk-ignore">
+                                <p class="">
+                                    @Html.DisplayFor(modelItem => item.College)
+                                    @Html.ActionLink(" ", "MajorIndex", new { id = item.Id }, new { @class = "uk-position-cover" })
+                                </p>
+                            </figcaption>
+                        </figure>
+                    </li>
+                }
+            </ul>
+        }
+
+    </div>
+</div>
+<div id="create-college" class="uk-modal">
+    @using (Html.BeginForm("CreateCollege", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+        <div class="uk-modal-dialog">
+            <a class="uk-modal-close uk-close"></a>
+            <form class="uk-form uk-form-horizontal">
+                <fieldset data-uk-margin>
+                    <legend>Create Group</legend>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(u => u.CreateCollege.CollegeName, new { @for = "college", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(u => u.CreateCollege.CollegeName, new { @placeholder = "college name", @id = "college", @required = "required" })
+                        </div>
+                    </div>
+                </fieldset>
+                <br />
+                <div class="uk-form-row">
+                    <button class="uk-width-1-5 uk-align-right uk-button uk-button-success" type="submit">OK</button>
+                </div>
+            </form>
+        </div>
+    }
+</div>
+@foreach (var item in Model.DbCollege)
+{
+    <div id="@Html.Raw("update-"+item.Id)" class="uk-modal">
+        @using (Html.BeginForm("UpdateCollege", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            <div class="uk-modal-dialog">
+                <a class="uk-modal-close uk-close"></a>
+                <form class="uk-form uk-form-horizontal">
+                    <fieldset data-uk-margin>
+                        <legend>Update College Information</legend>
+                        @Html.HiddenFor(d => d.UpdateCollege.CollegeId, new { @Value = item.Id })
+                        <div class="uk-form-row">
+                            @Html.LabelFor(u => u.UpdateCollege.CollegeName, new { @for = "college", @class = "uk-form-label uk-text-right" })
+                            <div class="uk-form-controls">
+                                @Html.TextBoxFor(u => u.UpdateCollege.CollegeName, new { @placeholder = "college name", @id = "college", @required = "required", @Value=item.College })
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="uk-form-row uk-margin-top">
+                        <button class="uk-width-1-5 uk-align-right uk-button uk-button-primary" type="submit">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div id="@Html.Raw("delete-"+item.Id)" class="uk-modal">
+        @using (Html.BeginForm("DeleteCollege", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            <div class="uk-modal-dialog">
+                <a class="uk-modal-close uk-close"></a>
+                <form class="uk-form uk-form-horizontal">
+                    <fieldset data-uk-margin>
+                        <legend>Delete Confirmation</legend>
+                        @Html.HiddenFor(d=>d.DeleteCollege.CollegeId, new { @Value=item.Id})
+                        <div class="uk-form-row">
+                            Are you sure to remove @Html.DisplayFor(modelItem => item.College, new { @class = "uk-text-bold" }) from the list?
+                            <div class="uk-form-controls">
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="uk-form-row uk-margin-top">
+                        <button class="uk-width-1-5 uk-align-right uk-button uk-button-primary" type="submit">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+}

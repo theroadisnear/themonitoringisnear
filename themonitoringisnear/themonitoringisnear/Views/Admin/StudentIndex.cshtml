@@ -1,0 +1,302 @@
+﻿@model themonitoringisnear.Models.MultipleModel.StudentIndexModelVM
+@{
+    ViewBag.Title = "StudentIndex";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@Scripts.Render("~/Scripts/components/grid.js")
+@if (Model.Error == true)
+{
+    foreach (var error in Model.Message)
+    {
+        <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(modelItem => error)', { status: 'warning', timeout: 0, pos: 'bottom-right' });
+            });
+        </script>
+    }
+}
+else if (Model.Error == false)
+{
+    <script>
+            $(document).ready(function () {
+                UIkit.notify('@Html.DisplayFor(m=>m.Message[0])', { status: 'success', timeout: 5000, pos: 'bottom-right' });
+            });
+    </script>
+}
+<div class="uk-margin-small uk-margin-top">
+    <h2 class="">
+        <span class="uk-vertical-align-middle">
+            @Html.ActionLink(" ", "SectionIndex", new { id = Model.MajorId }, new { @class = "uk-icon-chevron-left uk-icon-large" })
+        </span>
+        @Html.DisplayFor(s=>s.SectionName)
+    </h2>
+    <ul class="uk-subnav uk-subnav-pill">
+        <li class="">
+            <a class="uk-button-primary" data-uk-modal="{target:'#create-student'}"><i class="uk-icon-plus-square"></i> Create</a>
+        </li>
+    </ul>
+    <ul id="sort1" class="uk-subnav uk-subnav-pill uk-margin-large-left">
+        <li data-uk-sort="my-category">
+            <a href="#">Ascending</a>
+        </li>
+        <li data-uk-sort="my-category:desc">
+            <a href="#">Descending</a>
+        </li>
+    </ul>
+</div>
+<div class="uk-margin-left">
+    @if (!Model.DbStudent.Any())
+    {
+        <h2 class="uk-text-warning">There is no existing student</h2>
+    }
+    else if (Model.DbStudent.Any())
+    {
+        <div class="uk-grid-small" data-uk-grid="{controls:'#sort1'}">
+            @foreach (var item in Model.DbStudent)
+                {
+                <div class="uk-animation-scale-up" data-my-category="@Html.DisplayFor(modelItem => item.LastName)">
+                    <div class="uk-text-center">
+                        <div class="uk-thumbnail uk-overlay-hover uk-border-circle">
+                            <figure class="uk-overlay">
+                                <img class="uk-border-circle" width="150" height="150" src="@Url.Content("~/Image/default/profile_picture.png")" />
+                                <figcaption class="uk-overlay-panel uk-overlay-background uk-flex uk-flex-center uk-flex-middle uk-text-center uk-border-circle">
+                                    <div>
+                                        @if (Model.DbUser.Where(u => u.StudentId == item.Id).Any())
+                                        {
+                                            <a class="uk-icon-button uk-icon-user-secret" data-uk-modal="{target:'@Html.Raw("#update-account-"+item.Id)'}" data-uk-tooltip title="Update Account Information"></a>
+                                        }
+                                        else if (!(Model.DbUser.Where(u => u.StudentId == item.Id).Any()))
+                                        {
+                                            <a class="uk-icon-button uk-icon-user-plus" data-uk-modal="{target:'@Html.Raw("#register-"+item.Id)'}" data-uk-tooltip title="Create Account"></a>
+                                        }
+                                        <a class="uk-icon-button uk-icon-refresh" data-uk-modal="{target:'@Html.Raw("#update-"+item.Id)'}" data-uk-tooltip title="Update Student Information"></a>
+                                        <a class="uk-icon-button uk-icon-minus-circle" data-uk-modal="{target:'@Html.Raw("#delete-"+item.Id)'}" data-uk-tooltip title="Delete Student"></a>
+                                    </div>
+                                </figcaption>
+                            </figure>
+                        </div>
+                        <h6 class="uk-margin-bottom-remove uk-margin-top-remove uk-text-center">
+                            @Html.DisplayFor(modelItem => item.StudentNumber)
+                        </h6>
+                        <h2 class="uk-margin-bottom-remove uk-margin-top-remove uk-text-center">
+                            @Html.DisplayFor(modelItem => item.LastName), @Html.DisplayFor(modelItem => item.FirstName)
+                        </h2>
+                        <p class="uk-text-muted uk-margin-top-remove">
+                            @Html.DisplayFor(modelItem => item.Section.Section)
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<div id="create-student" class="uk-modal">
+    @using (Html.BeginForm("CreateStudent", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(s=>s.CreateStudent.SectionId, new { @Value=Model.SectionId})
+        <div class="uk-modal-dialog">
+            <a class="uk-modal-close uk-close"></a>
+            <fieldset data-uk-margin>
+                <legend>Create Student</legend>
+                <div class="uk-form-row">
+                    @Html.LabelFor(s => s.CreateStudent.StudentNumber, new { @for = "studentNumber", @class = "uk-form-label uk-text-right" })
+                    <div class="uk-form-controls">
+                        @Html.TextBoxFor(s => s.CreateStudent.StudentNumber, new { @placeholder = "student number", @id = "studentNumber", @required = "required" })
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    @Html.LabelFor(s => s.CreateStudent.LastName, new { @for = "studentLastName", @class = "uk-form-label uk-text-right" })
+                    <div class="uk-form-controls">
+                        @Html.TextBoxFor(s => s.CreateStudent.LastName, new { @placeholder = "last name", @id = "studentLastName", @required = "required" })
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    @Html.LabelFor(s => s.CreateStudent.FirstName, new { @for = "studentFirstName", @class = "uk-form-label uk-text-right" })
+                    <div class="uk-form-controls">
+                        @Html.TextBoxFor(s => s.CreateStudent.FirstName, new { @placeholder = "first name", @id = "studentFirstName", @required = "required" })
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    @Html.LabelFor(s => s.CreateStudent.MiddleInitial, new { @for = "studentMiddleInitial", @class = "uk-form-label uk-text-right" })
+                    <div class="uk-form-controls">
+                        @Html.TextBoxFor(s => s.CreateStudent.MiddleInitial, new { @placeholder = "middle initial", @id = "studentMiddleInitial", @required = "required" })
+                    </div>
+                </div>
+                <div class="uk-form-row">
+                    @Html.LabelFor(s => s.CreateStudent.Gender, new { @for = "gender", @class = "uk-form-label uk-text-right" })
+                    <div class="uk-form-controls">
+                        @Html.DropDownListFor(s => s.CreateStudent.Gender, new List<SelectListItem>
+                               {
+                                   new SelectListItem(){Text = "Male", Value = "male", Selected=true},
+                                   new SelectListItem(){Text = "Female", Value = "female"},
+                               }, new { @id = "gender" })
+                    </div>
+                </div>
+            </fieldset>
+            <br />
+            <div class="uk-form-row">
+                <button class="uk-width-1-5 uk-align-right uk-button uk-button-success" type="submit">OK</button>
+            </div>
+        </div>
+    }
+</div>
+@foreach (var item in Model.DbStudent)
+{
+    <div id="@Html.Raw("update-"+item.Id)" class="uk-modal">
+        @using (Html.BeginForm("UpdateStudent", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(s=>s.UpdateUser.StudentId, new { @Value=item.Id})
+            @Html.HiddenFor(s=>s.SectionId)
+            <div class="uk-modal-dialog">
+                <a class="uk-modal-close uk-close"></a>
+                <fieldset data-uk-margin>
+                    <legend>Update Student Information</legend>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(s => s.UpdateUser.StudentNumber, new { @for = "updateStudentNumber", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(u => u.UpdateUser.StudentNumber, new { @id = "updateStudentNumber", @required = "required", @Value = item.StudentNumber })
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(s => s.UpdateUser.LastName, new { @for = "updateLastName", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(u => u.UpdateUser.LastName, new { @id = "updateLastName", @required = "required", @Value = item.LastName })
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(s => s.UpdateUser.FirstName, new { @for = "updateFirstName", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(u => u.UpdateUser.FirstName, new { @id = "updateFirstName", @required = "required", @Value = item.FirstName })
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(s => s.UpdateUser.MiddleInitial, new { @for = "updateMiddleInitial", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @Html.TextBoxFor(s => s.UpdateUser.MiddleInitial, new { @id = "updateMiddleInitial", @required = "required", @Value = item.MiddleInitial })
+                        </div>
+                    </div>
+                    <div class="uk-form-row">
+                        @Html.LabelFor(s => s.UpdateUser.Gender, new { @for = "gender", @class = "uk-form-label uk-text-right" })
+                        <div class="uk-form-controls">
+                            @if (item.Gender == "male")
+                            {
+                                @Html.DropDownListFor(s => s.UpdateUser.Gender, new List<SelectListItem>
+                                {
+                                    new SelectListItem() { Text = "Male", Value = "male", Selected = true },
+                                   new SelectListItem() { Text = "Female", Value = "female", Selected = false },
+                               }, new { @id = "gender" })
+                            }
+                            else
+                            {
+                                @Html.DropDownListFor(s => s.UpdateUser.Gender, new List<SelectListItem>
+                                {
+                                new SelectListItem() { Text = "Male", Value = "male", Selected = false },
+                                   new SelectListItem() { Text = "Female", Value = "female", Selected = true },
+                               }, new { @id = "gender" })
+                            }
+
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="uk-form-row uk-margin-top">
+                    <button class="uk-width-1-5 uk-align-right uk-button uk-button-primary" type="submit">Confirm</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div id="@Html.Raw("delete-"+item.Id)" class="uk-modal">
+        @using (Html.BeginForm("DeleteStudent", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(s => s.DeleteStudent.StudentId, new { @Value = item.Id })
+            @Html.HiddenFor(s => s.SectionId)
+            <div class="uk-modal-dialog">
+                <a class="uk-modal-close uk-close"></a>
+                <form class="uk-form uk-form-horizontal">
+                    <fieldset data-uk-margin>
+                        <legend>Delete Confirmation</legend>
+                        <div class="uk-form-row">
+                            Are you sure to remove @Html.DisplayFor(modelItem => item.LastName), @Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.MiddleInitial) from the list?
+                            <div class="uk-form-controls">
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="uk-form-row uk-margin-top">
+                        <button class="uk-width-1-5 uk-align-right uk-button uk-button-primary" type="submit">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div id="@Html.Raw("register-"+item.Id)" class="uk-modal">
+        @using (Html.BeginForm("CreateAccount", "Admin", FormMethod.Post, new { @class = "uk-form uk-form-horizontal", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(s => s.CreateUser.StudentId, new { @Value = item.Id })
+            @Html.HiddenFor(s => s.SectionId)
+            <div class="uk-modal-dialog">
+                <a class="uk-modal-close uk-close"></a>
+                <form class="uk-form uk-form-horizontal">
+                    <fieldset data-uk-margin>
+                        <legend>Account Creation</legend>
+                        <div class="uk-form-row">
+                            <dl class="uk-description-list-horizontal">
+                                <dt class="uk-text-right">
+                                    Student Number:
+                                </dt>
+                                <dd>
+                                    @Html.DisplayFor(modelItem => item.StudentNumber)
+                                </dd>
+                                <dt class="uk-text-right">
+                                    Full Name:
+                                </dt>
+                                <dd>
+                                    @Html.DisplayFor(modelItem => item.LastName), @Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.MiddleInitial).
+                                </dd>
+                                <dt class="uk-text-right">
+                                    Section:
+                                </dt>
+                                <dd>
+                                    @Html.DisplayFor(modelItem => item.Section.Section)
+                                </dd>
+                                <dt class="uk-text-right">
+                                    College:
+                                </dt>
+                                <dd>
+                                    @Html.DisplayFor(modelItem => item.Section.Major.College.College)
+                                </dd>
+                            </dl>
+                        </div>
+                        <hr class="uk-panel-divider"/>
+                        <div class="uk-form-row">
+                            @Html.LabelFor(s => s.CreateUser.Email, new { @for = "createUserEmail", @class = "uk-form-label uk-text-right" })
+                            <div class="uk-form-controls">
+                                @Html.TextBoxFor(u => u.CreateUser.Email, new {@placeholder="email address", @id = "createUserEmail", @required = "required"})
+                            </div>
+                        </div>
+                        <div class="uk-form-row">
+                            @Html.LabelFor(s => s.CreateUser.Role, new { @for = "createUserRole", @class = "uk-form-label uk-text-right" })
+                            <div class="uk-form-controls">
+                                @Html.DropDownListFor(u => u.CreateUser.Role, new List<SelectListItem>
+                                {
+                                    new SelectListItem() { Text = "Staff", Value = "staff", Selected = true },
+                                    new SelectListItem() { Text = "Local Administrator", Value = "localadministrator", Selected = false },
+                                    new SelectListItem() { Text = "Administrator", Value = "administrator", Selected = false },
+                                }, new { @id = "createUserRole" })
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="uk-form-row uk-margin-top">
+                        <button class="uk-width-1-5 uk-align-right uk-button uk-button-primary" type="submit">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+}
+
